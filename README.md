@@ -153,8 +153,9 @@ pytest -v
 <details>
 <summary>👥 Contributors</summary>
 
-* **Vaishak Balachandra** — Project Lead (MS CS @ Purdue, AI/ML focus)
-* *Add teammates/mentors here*
+* **Harshith B** — Project Lead (BE CSE @ BMSCE)
+* *Aashirvaad Kumar S*
+* *Govind Jairam Rathod*
 
 </details>
 
@@ -163,7 +164,7 @@ pytest -v
 <details>
 <summary>📜 License</summary>
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+This project is licensed under the --- License — see [LICENSE](LICENSE) for details.
 
 </details>
 
