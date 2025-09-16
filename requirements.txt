@@ -1,0 +1,29 @@
+# --- Core framework ---
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+anyio==4.4.0
+
+# --- Database (MongoDB async driver) ---
+motor==3.4.0
+pymongo==4.7.2
+bson==0.5.10
+
+# --- Auth & Security ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.1.3
+email-validator==2.2.0
+
+# --- Data models & validation ---
+pydantic==2.8.2
+pydantic-settings==2.4.0
+
+# --- Dev tools ---
+pytest==8.2.2
+httpx==0.27.0   # for testing FastAPI endpoints
+ruff==0.6.9
+black==24.4.2
+isort==5.13.2
+
+# --- Optional (for .env support) ---
+python-dotenv==1.0.1
