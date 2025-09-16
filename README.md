@@ -1,7 +1,3 @@
-
----
-
-````markdown
 # 🛡️ SEC-COPILOT  
 *A Multi-Agent LLM-based Cybersecurity Copilot for SOC Teams*
 
@@ -170,6 +166,5 @@ pytest -v
 This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
 
 </details>
-```
 
 ---
