@@ -1,0 +1,24 @@
+[project]
+name = "sec-copilot"
+version = "0.1.0"
+description = "Multi-agent SOC copilot (local LLM + RAG)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "requests",
+  "pydantic>=2.11.9",
+  "python-dotenv>=1.1.1",
+  "sqlmodel>=0.0.18",
+  "aiosqlite>=0.20",
+  "passlib[bcrypt]>=1.7.4",
+  "python-jose[cryptography]>=3.3.0",
+  "pyjwt>=2.10.1",
+  "bcrypt>=4.3.0",
+  "motor>=3.7.1",
+]
+
+[tool.uv]
+# optional: set default python if you use multiple versions
+# python-preference = "only-managed"

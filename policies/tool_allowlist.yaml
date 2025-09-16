@@ -1,0 +1,7 @@
+tools:
+  nmap:
+    allowed_flags:
+      - "-sS"
+      - "-sV"
+      - "-Pn"
+      - "-T4"

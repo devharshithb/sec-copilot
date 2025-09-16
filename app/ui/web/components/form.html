@@ -1,0 +1,22 @@
+<div class="card" style="margin-top:16px">
+  <div class="title">New investigation</div>
+  <div class="grid">
+    <div>
+      <label class="muted">Your prompt</label>
+      <textarea id="prompt" placeholder="Investigate suspicious port scans from 203.0.113.12"></textarea>
+    </div>
+    <div>
+      <label class="muted">Mode</label><br/>
+      <select id="mode">
+        <option value="assist" selected>assist</option>
+        <option value="simulate">simulate</option>
+      </select>
+      <div style="height:8px"></div>
+      <label class="muted">Game ID (optional)</label><br/>
+      <input id="gameId" placeholder="abc123"/>
+      <div style="height:8px"></div>
+      <button id="runBtn">Run agents</button>
+    </div>
+  </div>
+  <div id="status" class="muted" style="margin-top:8px"></div>
+</div>

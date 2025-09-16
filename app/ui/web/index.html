@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SEC-COPILOT</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
+      <div class="brand">
+        <button id="closeSidebar" class="mobile-only">☰</button>
+        <span class="logo-dot"></span>
+        <span class="brand-name">SEC-COPILOT</span>
+      </div>
+
+      <div class="side-actions">
+        <button id="newChatBtn" class="btn primary">New chat</button>
+        <div class="search">
+          <input id="searchChats" placeholder="Search chats" />
+        </div>
+      </div>
+
+      <div class="side-group">
+        <div class="side-title">Folders</div>
+        <div class="folder-actions">
+          <input id="newFolderName" placeholder="New folder" />
+          <button id="addFolderBtn" class="btn small">+</button>
+        </div>
+        <ul id="foldersList" class="folders"></ul>
+      </div>
+
+      <div class="side-group">
+        <div class="side-title">History</div>
+        <ul id="historyList" class="history"></ul>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- topbar -->
+      <header class="topbar">
+        <button id="openSidebar" class="mobile-only">☰</button>
+        <div class="crumbs">
+          Home / <span id="convTitle">New conversation</span>
+        </div>
+        <div class="top-actions">
+          <button id="toggleTrace" class="btn">Show agent trace</button>
+          <button id="logoutBtn" class="btn">Logout</button>
+        </div>
+      </header>
+
+      <!-- chat stream -->
+      <section id="messages" class="messages"></section>
+
+      <!-- trace -->
+      <section id="tracePanel" class="trace hidden">
+        <div class="trace-head">
+          <strong>Agent trace</strong>
+        </div>
+        <div id="traceSteps" class="trace-steps"></div>
+      </section>
+
+      <!-- composer -->
+      <footer class="composer-wrap">
+        <form id="composer" class="composer">
+          <div class="plus-wrap">
+            <button type="button" id="plusBtn" class="circle">
+              <span>+</span>
+            </button>
+            <div id="plusMenu" class="menu hidden">
+              <button data-menu="files">Add files</button>
+              <button data-menu="agent">Agent mode</button>
+              <hr />
+              <button data-menu="web">Web search</button>
+            </div>
+          </div>
+          <input id="prompt" class="input" placeholder="Ask anything" />
+          <button id="send" class="send circle">➤</button>
+        </form>
+      </footer>
+    </main>
+  </div>
+
+  <div id="backdrop" class="backdrop hidden"></div>
+  <script src="app.js"></script>
+</body>
+
+</html>

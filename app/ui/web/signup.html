@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SEC-COPILOT — Signup</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .auth-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f0f0f
+        }
+
+        .auth {
+            background: #181818;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            width: 340px;
+            color: #fff
+        }
+
+        .auth h1 {
+            margin: 0 0 10px
+        }
+
+        .auth .muted {
+            color: #bdbdbd;
+            font-size: 12px;
+            margin-bottom: 12px
+        }
+
+        .auth input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            background: #303030;
+            color: #fff;
+            margin: 6px 0
+        }
+
+        .auth button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            background: #3a3a3a;
+            color: #fff;
+            margin-top: 8px;
+            cursor: pointer
+        }
+
+        .auth a {
+            color: #9ad1ff;
+            text-decoration: none
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-wrap">
+        <form class="auth" id="signupForm" novalidate>
+            <h1>Create account</h1>
+            <div class="muted">You’ll be redirected to the app</div>
+            <input id="email" type="email" placeholder="Email" autocomplete="username" required />
+            <input id="password" type="password" placeholder="Password (min 6 chars)" minlength="6"
+                autocomplete="new-password" required />
+            <button id="signupBtn" type="submit">Sign up</button>
+            <div class="muted" style="margin-top:10px">Already have one? <a href="login.html">Login</a></div>
+            <div id="err" class="muted" style="color:#ffb7b7"></div>
+        </form>
+    </div>
+
+    <script>
+        const TOKEN_KEY = 'sec_token';
+
+        // If already logged in, send to app
+        if (localStorage.getItem(TOKEN_KEY)) {
+            window.location.replace('/');
+        }
+
+        const form = document.getElementById('signupForm');
+        const btn = document.getElementById('signupBtn');
+        const err = document.getElementById('err');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            err.textContent = '';
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!email || !password) { err.textContent = 'Email and password are required.'; return; }
+            if (password.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
+
+            btn.disabled = true; const prev = btn.textContent; btn.textContent = 'Creating…';
+
+            try {
+                const res = await fetch('/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    err.textContent = data?.detail || 'Signup failed';
+                    return;
+                }
+                if (!data?.access_token) {
+                    err.textContent = 'No token in response';
+                    return;
+                }
+
+                localStorage.setItem(TOKEN_KEY, data.access_token);
+                window.location.replace('/');
+            } catch (e) {
+                console.error(e);
+                err.textContent = 'Network error. Please try again.';
+            } finally {
+                btn.disabled = false; btn.textContent = prev;
+            }
+        });
+    </script>
+</body>
+
+</html>
