@@ -84,13 +84,26 @@
       border: 1px solid #DDD; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center;
       margin: 0 5px; height: 40px; width: 40px;
     }
-    footer {
-      background-color: #222; color: #fff; font-size: 14px; bottom: 0; position: fixed; left: 0; right: 0;
-      text-align: center; z-index: 999;
+
+    /* ===== Forgot Password / OTP modal ===== */
+    .backdrop {
+      display:none; position:fixed; inset:0; background:#0008; z-index:1000;
+      align-items:center; justify-content:center;
     }
-    footer p { margin: 10px 0; }
-    footer i { color: red; }
-    footer a { color: #3c97bf; text-decoration: none; }
+    .modal {
+      background:#fff; color:#111; border-radius:10px; padding:20px; width:92%; max-width:380px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .muted { font-size:13px; color:#444; }
+    .row { display:flex; gap:8px; justify-content:flex-end; }
+    .btn-sec {
+      padding:8px 12px; border-radius:8px; border:1px solid #ddd; background:#eee; color:#333; font-weight:600;
+    }
+    .btn-pri {
+      padding:8px 12px; border-radius:8px; border:1px solid #FF4B2B; background:#FF4B2B; color:#fff; font-weight:700;
+    }
+    .err { font-size:13px; color:#e33; min-height:18px; margin:8px 0; }
+    .ok  { color:#2e7d32; }
   </style>
 </head>
 
@@ -107,10 +120,10 @@
           <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
         </div>
         <span>or use your email for registration</span>
-        <input type="text" placeholder="Name" autocomplete="name"/>
-        <input type="email" placeholder="Email" autocomplete="username" required/>
-        <input type="password" placeholder="Password" autocomplete="new-password" required/>
-        <button type="submit">Sign Up</button>
+        <input id="su-name" type="text" placeholder="Name" autocomplete="name"/>
+        <input id="su-email" type="email" placeholder="Email" autocomplete="username" required/>
+        <input id="su-pass" type="password" placeholder="Password" autocomplete="new-password" required/>
+        <button id="su-btn" type="submit">Sign Up</button>
       </form>
     </div>
 
@@ -123,10 +136,10 @@
           <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
         </div>
         <span>or use your account</span>
-        <input type="email" placeholder="Email" autocomplete="username" required/>
-        <input type="password" placeholder="Password" autocomplete="current-password" required/>
-        <a href="#">Forgot your password?</a>
-        <button type="submit">Sign In</button>
+        <input id="si-email" type="email" placeholder="Email" autocomplete="username" required/>
+        <input id="si-pass" type="password" placeholder="Password" autocomplete="current-password" required/>
+        <a href="#" id="forgotLink">Forgot your password?</a>
+        <button id="si-btn" type="submit">Sign In</button>
       </form>
     </div>
 
@@ -138,7 +151,7 @@
           <button class="ghost" id="signIn" type="button">Sign In</button>
         </div>
         <div class="overlay-panel overlay-right">
-          <h1>Hello, Friend!</h1>
+          <h1>Hello, Analyst!</h1>
           <p>Enter your personal details and start journey with us</p>
           <button class="ghost" id="signUp" type="button">Sign Up</button>
         </div>
@@ -146,28 +159,40 @@
     </div>
   </div>
 
-  <!-- <footer>
-    <p>
-      Created with <i class="fa fa-heart"></i> by
-      <a target="_blank" href="https://florin-pop.com">Florin Pop</a>
-      - Read how I created this and how you can join the challenge
-      <a target="_blank" href="https://www.florin-pop.com/blog/2019/03/double-slider-sign-in-up-form/">here</a>.
-    </p>
-  </footer> -->
+  <!-- ===== OTP-based Forgot Password modal (two steps) ===== -->
+  <div id="fp-backdrop" class="backdrop">
+    <div class="modal">
+      <h3 style="margin:0 0 8px;">Reset your password</h3>
+      <div class="muted">Enter your email. We’ll send a 6-digit code.</div>
+      <input id="fp-email" type="email" placeholder="you@example.com"
+             style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:10px;">
+      <div id="fp-msg" class="err"></div>
+      <div class="row">
+        <button id="fp-cancel" class="btn-sec" type="button">Cancel</button>
+        <button id="fp-send" class="btn-pri" type="button">Send code</button>
+      </div>
+
+      <!-- Step 2 (appears after sending) -->
+      <div id="otp-area" style="display:none;margin-top:12px;">
+        <div class="muted" style="margin-bottom:6px;">Enter the 6-digit code</div>
+        <input id="otp-input" type="text" placeholder="123456"
+               style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+        <div id="otp-msg" class="err"></div>
+        <div class="row">
+          <button id="otp-cancel" class="btn-sec" type="button">Cancel</button>
+          <button id="otp-verify" class="btn-pri" type="button">Verify</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
-    // ===== Your original panel toggle (unchanged) =====
+    // ===== Panel toggle (your original) =====
     const signUpButton = document.getElementById('signUp');
     const signInButton = document.getElementById('signIn');
     const container = document.getElementById('container');
-
-    signUpButton.addEventListener('click', () => {
-      container.classList.add("right-panel-active");
-    });
-
-    signInButton.addEventListener('click', () => {
-      container.classList.remove("right-panel-active");
-    });
+    signUpButton.addEventListener('click', () => container.classList.add("right-panel-active"));
+    signInButton.addEventListener('click', () => container.classList.remove("right-panel-active"));
 
     // ===== Minimal integration (no design changes) =====
     (function () {
@@ -179,7 +204,7 @@
         return;
       }
 
-      // Select forms by container (no HTML changes needed)
+      // Elements
       const signupForm = document.querySelector('.sign-up-container form');
       const signinForm = document.querySelector('.sign-in-container form');
 
@@ -191,24 +216,17 @@
           body: JSON.stringify(body)
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const msg = (data && data.detail) ? data.detail : 'Request failed';
-          throw new Error(msg);
-        }
+        if (!res.ok) throw new Error(data?.detail || 'Request failed');
         return data;
       }
 
-      // SIGN UP handler
+      // SIGN UP
       signupForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const inputs = signupForm.querySelectorAll('input');
-        const name = inputs[0].value.trim(); // optional (unused by backend)
-        const email = inputs[1].value.trim();
-        const password = inputs[2].value.trim();
-
-        const btn = signupForm.querySelector('button[type="submit"]');
+        const email = document.getElementById('su-email').value.trim();
+        const password = document.getElementById('su-pass').value.trim();
+        const btn = document.getElementById('su-btn');
         const prev = btn.textContent; btn.disabled = true; btn.textContent = 'Creating…';
-
         try {
           const data = await postJSON('/auth/signup', { email, password });
           if (!data?.access_token) throw new Error('No token in response');
@@ -221,16 +239,13 @@
         }
       });
 
-      // SIGN IN handler
+      // SIGN IN
       signinForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const inputs = signinForm.querySelectorAll('input');
-        const email = inputs[0].value.trim();
-        const password = inputs[1].value.trim();
-
-        const btn = signinForm.querySelector('button[type="submit"]');
+        const email = document.getElementById('si-email').value.trim();
+        const password = document.getElementById('si-pass').value.trim();
+        const btn = document.getElementById('si-btn');
         const prev = btn.textContent; btn.disabled = true; btn.textContent = 'Signing in…';
-
         try {
           const data = await postJSON('/auth/login', { email, password });
           if (!data?.access_token) throw new Error('No token in response');
@@ -240,6 +255,105 @@
           alert(err.message || 'Login failed');
         } finally {
           btn.disabled = false; btn.textContent = prev;
+        }
+      });
+    })();
+
+    // ===== OTP-based Forgot Password flow =====
+    (function () {
+      const TOKEN_KEY = 'sec_token';
+
+      const fpBackdrop = document.getElementById('fp-backdrop');
+      const fpEmail    = document.getElementById('fp-email');
+      const fpMsg      = document.getElementById('fp-msg');
+      const fpSend     = document.getElementById('fp-send');
+      const fpCancel   = document.getElementById('fp-cancel');
+      const forgotLink = document.getElementById('forgotLink');
+
+      const otpArea    = document.getElementById('otp-area');
+      const otpInput   = document.getElementById('otp-input');
+      const otpMsg     = document.getElementById('otp-msg');
+      const otpVerify  = document.getElementById('otp-verify');
+      const otpCancel  = document.getElementById('otp-cancel');
+
+      function openFP() {
+        fpMsg.classList.remove('ok'); fpMsg.textContent = '';
+        otpMsg.textContent = '';
+        fpEmail.value = '';
+        otpInput.value = '';
+        otpArea.style.display = 'none';
+        fpBackdrop.style.display = 'flex';
+        fpEmail.focus();
+      }
+      function closeFP() {
+        fpBackdrop.style.display = 'none';
+      }
+
+      forgotLink?.addEventListener('click', (e) => { e.preventDefault(); openFP(); });
+      fpCancel?.addEventListener('click', () => closeFP());
+      fpBackdrop?.addEventListener('click', (e) => { if (e.target === fpBackdrop) closeFP(); });
+      otpCancel?.addEventListener('click', () => closeFP());
+
+      // Step 1: send OTP
+      fpSend?.addEventListener('click', async () => {
+        const email = fpEmail.value.trim();
+        if (!email) { fpMsg.textContent = 'Please enter your email.'; return; }
+        fpMsg.textContent = 'Sending code…'; fpMsg.classList.remove('ok');
+        fpSend.disabled = true;
+        try {
+          const res = await fetch('/auth/forgot', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            fpMsg.textContent = data?.detail || 'Failed to send code.';
+            return;
+          }
+          // DEV: show otp if backend returns it
+          if (data.dev_otp) {
+            otpMsg.classList.add('ok');
+            otpMsg.textContent = `DEV OTP: ${data.dev_otp}`;
+          } else {
+            otpMsg.textContent = '';
+          }
+          fpMsg.textContent = '';
+          otpArea.style.display = 'block';
+          otpInput.focus();
+        } catch {
+          fpMsg.textContent = 'Network error.';
+        } finally {
+          fpSend.disabled = false;
+        }
+      });
+
+      // Step 2: verify OTP -> get reset token
+      otpVerify?.addEventListener('click', async () => {
+        const email = fpEmail.value.trim();
+        const otp = otpInput.value.trim();
+        if (!otp) { otpMsg.textContent = 'Enter the 6-digit code.'; return; }
+        otpMsg.textContent = 'Verifying…'; otpMsg.classList.remove('ok');
+        otpVerify.disabled = true;
+        try {
+          const res = await fetch('/auth/forgot/verify', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ email, otp })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.reset_token) {
+            otpMsg.textContent = data?.detail || 'Invalid or expired code.';
+            otpVerify.disabled = false;
+            return;
+          }
+          // Make sure we don't carry any old session token
+          try { localStorage.removeItem(TOKEN_KEY); } catch {}
+          closeFP();
+          window.location.replace(`/reset.html?token=${encodeURIComponent(data.reset_token)}`);
+        } catch {
+          otpMsg.textContent = 'Network error.';
+          otpVerify.disabled = false;
         }
       });
     })();

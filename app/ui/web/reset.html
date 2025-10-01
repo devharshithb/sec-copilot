@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Reset password — SEC-COPILOT</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body{background:#0f0f0f;display:flex;align-items:center;justify-content:center;min-height:100vh}
+    .card{background:#181818;border:1px solid #2a2a2a;border-radius:12px;padding:20px;color:#fff;max-width:360px;width:92%}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #2a2a2a;background:#303030;color:#fff;margin:6px 0}
+    button{width:100%;padding:10px;border-radius:8px;border:1px solid #2a2a2a;background:#3a3a3a;color:#fff;margin-top:8px;cursor:pointer}
+    a{color:#9ad1ff;text-decoration:none}
+    .msg{min-height:20px;font-size:13px}
+  </style>
+</head>
+<body>
+  <form class="card" id="resetForm">
+    <h2 style="margin:0 0 8px">Set a new password</h2>
+    <div class="msg" id="msg"></div>
+    <input id="pwd1" type="password" placeholder="New password" required minlength="6"/>
+    <input id="pwd2" type="password" placeholder="Confirm password" required minlength="6"/>
+    <button type="submit" id="btn">Update password</button>
+<div style="margin-top:10px"><a href="/auth.html">Back to sign in</a></div>
+  </form>
+
+  <script>
+  const params = new URLSearchParams(location.search);
+  const token = params.get('token');
+  const msg = document.getElementById('msg');
+  const btn = document.getElementById('btn');
+  const form = document.getElementById('resetForm');
+  const TOKEN_KEY = 'sec_token';
+
+  // Always clear any existing session token to avoid accidental auto-login
+  try { localStorage.removeItem(TOKEN_KEY); } catch {}
+
+  if (!token) {
+    msg.textContent = 'Missing reset token. Please open the link from your email.';
+    btn.disabled = true;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = '';
+    const p1 = document.getElementById('pwd1').value.trim();
+    const p2 = document.getElementById('pwd2').value.trim();
+    if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
+    if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const res = await fetch('/auth/reset', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ token, new_password: p1 })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        msg.textContent = data?.detail || 'Reset failed.';
+        btn.disabled = false; btn.textContent = 'Update password';
+        return;
+      }
+      msg.style.color = '#8be28b';
+      msg.textContent = 'Password updated. You can sign in now.';
+      setTimeout(() => location.replace('/auth.html'), 1000);
+    } catch (e) {
+      msg.textContent = 'Network error.';
+      btn.disabled = false; btn.textContent = 'Update password';
+    }
+  });
+</script>
+
+</body>
+</html>
