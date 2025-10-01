@@ -1,32 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SEC-COPILOT</title>
+
+  <!-- Match auth/reset fonts/icons -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,800" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css" />
 
-  <!-- First-load auth gate: if no token, go to /auth.html -->
+  <!-- Auth gate -->
   <script>
     (function () {
       try {
-        const TOKEN_KEY = 'sec_token';
-        const token = localStorage.getItem(TOKEN_KEY);
-        // Allow direct access only if a token is present.
-        if (!token) {
-          // Use replace() so the back button doesn't bounce the user back here.
-          window.location.replace('/auth.html');
-        }
-      } catch (_) {
-        // If localStorage fails for any reason, fall back to auth.html.
-        window.location.replace('/auth.html');
-      }
+        const token = localStorage.getItem('sec_token');
+        if (!token) window.location.replace('/auth.html');
+      } catch (_) { window.location.replace('/auth.html'); }
     })();
   </script>
-  <noscript>
-    <meta http-equiv="refresh" content="0;url=/auth.html">
-  </noscript>
+  <noscript><meta http-equiv="refresh" content="0;url=/auth.html"></noscript>
 </head>
 
 <body>
@@ -34,7 +28,7 @@
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
       <div class="brand">
-        <button id="closeSidebar" class="mobile-only">☰</button>
+        <button id="closeSidebar" class="mobile-only" aria-label="Close Sidebar">☰</button>
         <span class="logo-dot"></span>
         <span class="brand-name">SEC-COPILOT</span>
       </div>
@@ -65,7 +59,7 @@
     <main class="main">
       <!-- topbar -->
       <header class="topbar">
-        <button id="openSidebar" class="mobile-only">☰</button>
+        <button id="openSidebar" class="mobile-only" aria-label="Open Sidebar">☰</button>
         <div class="crumbs">
           Home / <span id="convTitle">New conversation</span>
         </div>
@@ -90,18 +84,18 @@
       <footer class="composer-wrap">
         <form id="composer" class="composer">
           <div class="plus-wrap">
-            <button type="button" id="plusBtn" class="circle">
+            <button type="button" id="plusBtn" class="circle" aria-label="More actions">
               <span>+</span>
             </button>
             <div id="plusMenu" class="menu hidden">
-              <button data-menu="files">Add files</button>
-              <button data-menu="agent">Agent mode</button>
+              <button data-menu="files" type="button">Add files</button>
+              <button data-menu="agent" type="button">Agent mode</button>
               <hr />
-              <button data-menu="web">Web search</button>
+              <button data-menu="web" type="button">Web search</button>
             </div>
           </div>
           <input id="prompt" class="input" placeholder="Ask anything" />
-          <button id="send" class="send circle">➤</button>
+          <button id="send" class="send circle" aria-label="Send">➤</button>
         </form>
       </footer>
     </main>
@@ -110,5 +104,4 @@
   <div id="backdrop" class="backdrop hidden"></div>
   <script src="app.js"></script>
 </body>
-
 </html>
