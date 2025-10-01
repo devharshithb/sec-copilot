@@ -1,14 +1,13 @@
-// ===== AUTH GUARD =====
+// ========================= AUTH GUARD (single page) =========================
+(function () {
+  const PUBLIC = new Set(["/auth.html", "/favicon.ico"]);
+  const token = localStorage.getItem("sec_token");
+  if (!token && !PUBLIC.has(location.pathname)) {
+    location.replace("/auth.html");
+  }
+})();
+
 const TOKEN_KEY = "sec_token";
-const token = localStorage.getItem(TOKEN_KEY);
-
-const PUBLIC_PAGES = ["/login.html", "/signup.html", "/favicon.ico"];
-const path = window.location.pathname;
-
-if (!token && !PUBLIC_PAGES.includes(path)) {
-  window.location.replace("/login.html");
-}
-
 function authHeaders() {
   const t = localStorage.getItem(TOKEN_KEY);
   return {
@@ -16,7 +15,7 @@ function authHeaders() {
     ...(t ? { Authorization: `Bearer ${t}` } : {}),
   };
 }
-// ===== END AUTH GUARD =====
+// ======================= END AUTH GUARD =====================================
 
 /* ========== DOM helpers ========== */
 const $ = (s) => document.querySelector(s);
@@ -49,9 +48,10 @@ const storage = {
     localStorage.setItem("sec_copilot_state", JSON.stringify(s));
   },
 };
+
 let state = Object.assign(
   {
-    conversations: {}, // id -> { id, title, messages:[{role,content,html}], final, steps, folderId? }
+    conversations: {}, // id -> { id, title, messages:[{role,content,html}], final, steps }
     order: [], // newest first ids
     folders: {}, // id -> { id, name, chatIds:[] }
     folderOrder: [], // newest first ids
@@ -96,7 +96,23 @@ async function api(path, opts = {}) {
     ...opts,
     headers: { ...(opts.headers || {}), ...authHeaders() },
   });
-  if (!res.ok) throw await res.json();
+
+  // Handle expired/invalid token centrally
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    location.replace("/auth.html");
+    return Promise.reject({ detail: "Unauthorized" });
+  }
+
+  if (!res.ok) {
+    let err;
+    try {
+      err = await res.json();
+    } catch {
+      err = { detail: res.statusText };
+    }
+    throw err;
+  }
   return res.json();
 }
 
@@ -105,7 +121,7 @@ async function loadFolders() {
   state.folders = {};
   state.folderOrder = [];
   folders.forEach((f) => {
-    state.folders[f.id] = { ...f, chatIds: [] };
+    state.folders[f.id] = { ...f, chatIds: f.chatIds || [] };
     state.folderOrder.unshift(f.id);
   });
 }
@@ -199,7 +215,7 @@ function redrawFolders() {
     li.innerHTML = `
       <div class="folder-head" data-fid="${fid}">
         <div class="folder-title">📁 ${escapeHtml(f.name)}</div>
-        <div class="tiny muted">${f.chatIds.length} chats</div>
+        <div class="tiny muted">${(f.chatIds || []).length} chats</div>
       </div>
       <div class="folder-body hidden">
         <ul class="folder-chats"></ul>
@@ -207,7 +223,7 @@ function redrawFolders() {
     `;
     const body = li.querySelector(".folder-body");
     const list = li.querySelector(".folder-chats");
-    f.chatIds.forEach((cid) => {
+    (f.chatIds || []).forEach((cid) => {
       const c = state.conversations[cid];
       if (!c) return;
       const item = document.createElement("li");
@@ -242,14 +258,10 @@ function redrawHistory(filter = "") {
 }
 function attachHistoryEvents() {
   historyList.querySelectorAll(".chat-link").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      openConversation(btn.dataset.id);
-    });
+    btn.addEventListener("click", () => openConversation(btn.dataset.id));
   });
   foldersList.querySelectorAll(".chat-link").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      openConversation(btn.dataset.id);
-    });
+    btn.addEventListener("click", () => openConversation(btn.dataset.id));
   });
 }
 
@@ -324,7 +336,7 @@ async function sendPrompt() {
     const body = {
       messages: [{ role: "user", content: text }],
       mode: "assist",
-      conversation_id: activeId,
+      conversation_id: activeId, // important for threading
     };
     const data = await api("/api/chat", {
       method: "POST",
@@ -333,7 +345,6 @@ async function sendPrompt() {
 
     messagesEl.removeChild(t);
 
-    // assistant bubble from FinalDecision
     const ansHtml = renderSolution(data.final);
     messagesEl.appendChild(bubble("assistant", ansHtml));
     c.messages.push({
@@ -346,7 +357,7 @@ async function sendPrompt() {
     c.time = Date.now();
     renderTrace(c.steps);
 
-    // persist
+    // persist client-side snapshot
     storage.save(state);
     redrawHistory(searchInput.value.trim());
     redrawFolders();
@@ -422,9 +433,9 @@ document.addEventListener("keydown", (e) => {
     if (Number.isNaN(idx) || idx < 0 || idx >= state.folderOrder.length) return;
     const fid = state.folderOrder[idx];
     Object.values(state.folders).forEach((f) => {
-      f.chatIds = f.chatIds.filter((id) => id !== activeId);
+      f.chatIds = (f.chatIds || []).filter((id) => id !== activeId);
     });
-    state.folders[fid].chatIds.unshift(activeId);
+    (state.folders[fid].chatIds ||= []).unshift(activeId);
     storage.save(state);
     redrawFolders();
     attachHistoryEvents();
@@ -439,7 +450,7 @@ async function boot() {
   } catch (e) {
     console.error(e);
     localStorage.removeItem(TOKEN_KEY);
-    location.href = "/login.html";
+    location.replace("/auth.html");
     return;
   }
   redrawHistory();
@@ -472,7 +483,8 @@ if (openBtn) openBtn.addEventListener("click", openSidebar);
 if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
 if (backdrop) backdrop.addEventListener("click", closeSidebar);
 
+// ✅ updated logout → unified auth page
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   localStorage.removeItem(TOKEN_KEY);
-  window.location.replace("/login.html");
+  window.location.replace("/auth.html");
 });

@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SEC-COPILOT</title>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- First-load auth gate: if no token, go to /auth.html -->
+  <script>
+    (function () {
+      try {
+        const TOKEN_KEY = 'sec_token';
+        const token = localStorage.getItem(TOKEN_KEY);
+        // Allow direct access only if a token is present.
+        if (!token) {
+          // Use replace() so the back button doesn't bounce the user back here.
+          window.location.replace('/auth.html');
+        }
+      } catch (_) {
+        // If localStorage fails for any reason, fall back to auth.html.
+        window.location.replace('/auth.html');
+      }
+    })();
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0;url=/auth.html">
+  </noscript>
 </head>
 
 <body>
@@ -89,5 +109,4 @@
   <div id="backdrop" class="backdrop hidden"></div>
   <script src="app.js"></script>
 </body>
-
 </html>
