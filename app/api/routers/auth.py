@@ -1,5 +1,5 @@
 # app/api/routers/auth.py
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -25,6 +25,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 class SignupIn(BaseModel):
     email: EmailStr
     password: str
+    name: Optional[str] = None            # <--- NEW
 
 class LoginIn(BaseModel):
     email: EmailStr
@@ -46,7 +47,8 @@ class ResetIn(BaseModel):
 def user_public(u: dict) -> dict:
     return {
         "id": str(u["_id"]),
-        "email": u["email"],
+        "email": u.get("email", ""),
+        "name": u.get("name", ""),         # <--- include name
         "is_admin": bool(u.get("is_admin", False)),
         "created_at": u.get("created_at"),
     }
@@ -55,28 +57,37 @@ def user_public(u: dict) -> dict:
 # ---------- Signup ----------
 @router.post("/signup")
 async def signup(data: SignupIn, db: AsyncIOMotorDatabase = Depends(get_db)):
-    existing = await db.users.find_one({"email": str(data.email).lower()})
+    email = str(data.email).lower()
+    existing = await db.users.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    now = datetime.utcnow()
     doc = {
-        "email": str(data.email).lower(),
+        "email": email,
+        "name": (data.name or "").strip(),           # <--- store name
         "hashed_password": hash_password(data.password),
         "is_admin": False,
-        "created_at": datetime.utcnow(),
+        "created_at": now,
+        "updated_at": now,
     }
     res = await db.users.insert_one(doc)
     uid = str(res.inserted_id)
 
     token = create_access_token({"sub": uid})
-    return {"access_token": token, "token_type": "bearer", "user": user_public({**doc, "_id": res.inserted_id})}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": user_public({**doc, "_id": res.inserted_id}),
+    }
 
 
 # ---------- Login ----------
 @router.post("/login")
 async def login(data: LoginIn, db: AsyncIOMotorDatabase = Depends(get_db)):
-    u = await db.users.find_one({"email": str(data.email).lower()})
-    if not u or not verify_password(data.password, u["hashed_password"]):
+    email = str(data.email).lower()
+    u = await db.users.find_one({"email": email})
+    if not u or not verify_password(data.password, u.get("hashed_password", "")):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
     token = create_access_token({"sub": str(u["_id"])})

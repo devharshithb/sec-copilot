@@ -1,74 +1,162 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Reset password — SEC-COPILOT</title>
-  <link rel="stylesheet" href="style.css"/>
-  <style>
-    body{background:#0f0f0f;display:flex;align-items:center;justify-content:center;min-height:100vh}
-    .card{background:#181818;border:1px solid #2a2a2a;border-radius:12px;padding:20px;color:#fff;max-width:360px;width:92%}
-    input{width:100%;padding:10px;border-radius:8px;border:1px solid #2a2a2a;background:#303030;color:#fff;margin:6px 0}
-    button{width:100%;padding:10px;border-radius:8px;border:1px solid #2a2a2a;background:#3a3a3a;color:#fff;margin-top:8px;cursor:pointer}
-    a{color:#9ad1ff;text-decoration:none}
-    .msg{min-height:20px;font-size:13px}
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Reset password — SEC-COPILOT</title>
+
+    <!-- Montserrat font & icons -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f6f5f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: 'Montserrat', sans-serif;
+            height: 100vh;
+            margin: -20px 0 50px;
+        }
+
+        h1 {
+            font-weight: bold;
+            margin: 0;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        a {
+            color: #333;
+            font-size: 14px;
+            text-decoration: none;
+            margin: 15px 0;
+        }
+
+        button {
+            border-radius: 20px;
+            border: 1px solid #FF4B2B;
+            background-color: #FF4B2B;
+            color: #FFFFFF;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 10px 35px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: transform 80ms ease-in;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        form {
+            background-color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px 40px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            /* reduced width */
+            max-width: 90%;
+            /* responsive */
+            min-height: 300px;
+        }
+
+        input {
+            background-color: #eee;
+            border: none;
+            padding: 12px 15px;
+            margin: 8px 0;
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        /* Extra spacing below confirm password */
+        #pwd2 {
+            margin-bottom: 16px;
+        }
+
+        .msg {
+            min-height: 20px;
+            font-size: 13px;
+            margin: 6px 0;
+            color: #e33;
+        }
+    </style>
 </head>
+
 <body>
-  <form class="card" id="resetForm">
-    <h2 style="margin:0 0 8px">Set a new password</h2>
-    <div class="msg" id="msg"></div>
-    <input id="pwd1" type="password" placeholder="New password" required minlength="6"/>
-    <input id="pwd2" type="password" placeholder="Confirm password" required minlength="6"/>
-    <button type="submit" id="btn">Update password</button>
-<div style="margin-top:10px"><a href="/auth.html">Back to sign in</a></div>
-  </form>
+    <h2>Reset your password</h2>
 
-  <script>
-  const params = new URLSearchParams(location.search);
-  const token = params.get('token');
-  const msg = document.getElementById('msg');
-  const btn = document.getElementById('btn');
-  const form = document.getElementById('resetForm');
-  const TOKEN_KEY = 'sec_token';
+    <form id="resetForm">
+        <h1>Set New Password</h1>
+        <div class="msg" id="msg"></div>
+        <input id="pwd1" type="password" placeholder="New password" required minlength="6" />
+        <input id="pwd2" type="password" placeholder="Confirm password" required minlength="6" />
+        <button type="submit" id="btn">Update Password</button>
+        <a href="/auth.html">Back to sign in</a>
+    </form>
 
-  // Always clear any existing session token to avoid accidental auto-login
-  try { localStorage.removeItem(TOKEN_KEY); } catch {}
+    <script>
+        const params = new URLSearchParams(location.search);
+        const token = params.get('token');
+        const msg = document.getElementById('msg');
+        const btn = document.getElementById('btn');
+        const form = document.getElementById('resetForm');
+        const TOKEN_KEY = 'sec_token';
 
-  if (!token) {
-    msg.textContent = 'Missing reset token. Please open the link from your email.';
-    btn.disabled = true;
-  }
+        // Always clear session tokens to avoid auto-login bypass
+        try { localStorage.removeItem(TOKEN_KEY); } catch { }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    msg.textContent = '';
-    const p1 = document.getElementById('pwd1').value.trim();
-    const p2 = document.getElementById('pwd2').value.trim();
-    if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
-    if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
-    btn.disabled = true; btn.textContent = 'Saving…';
-    try {
-      const res = await fetch('/auth/reset', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ token, new_password: p1 })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        msg.textContent = data?.detail || 'Reset failed.';
-        btn.disabled = false; btn.textContent = 'Update password';
-        return;
-      }
-      msg.style.color = '#8be28b';
-      msg.textContent = 'Password updated. You can sign in now.';
-      setTimeout(() => location.replace('/auth.html'), 1000);
-    } catch (e) {
-      msg.textContent = 'Network error.';
-      btn.disabled = false; btn.textContent = 'Update password';
-    }
-  });
-</script>
+        if (!token) {
+            msg.textContent = 'Missing reset token. Please open the link from your email.';
+            btn.disabled = true;
+        }
 
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            const p1 = document.getElementById('pwd1').value.trim();
+            const p2 = document.getElementById('pwd2').value.trim();
+            if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
+            if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
+            btn.disabled = true; btn.textContent = 'Saving…';
+            try {
+                const res = await fetch('/auth/reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, new_password: p1 })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    msg.textContent = data?.detail || 'Reset failed.';
+                    btn.disabled = false; btn.textContent = 'Update Password';
+                    return;
+                }
+                msg.style.color = '#2e7d32';
+                msg.textContent = 'Password updated. You can sign in now.';
+                setTimeout(() => location.replace('/auth.html'), 1200);
+            } catch (e) {
+                msg.textContent = 'Network error.';
+                btn.disabled = false; btn.textContent = 'Update Password';
+            }
+        });
+    </script>
 </body>
+
 </html>
