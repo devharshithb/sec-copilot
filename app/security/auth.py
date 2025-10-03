@@ -13,6 +13,14 @@ import secrets
 
 from app.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_MINUTES
 from app.db import get_db
+import bcrypt
+
+# Patch: make passlib not choke on bcrypt >=4
+if not hasattr(bcrypt, "__about__"):
+    class _About:
+        __version__ = getattr(bcrypt, "__version__", "unknown")
+    bcrypt.__about__ = _About()
+
 
 # ========== Password hashing ==========
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

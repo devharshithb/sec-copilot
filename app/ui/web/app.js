@@ -1,4 +1,4 @@
-// ========================= AUTH GUARD (single page) =========================
+// ========================= AUTH GUARD =========================
 (function () {
   const PUBLIC = new Set(["/auth.html", "/favicon.ico"]);
   const token = localStorage.getItem("sec_token");
@@ -15,34 +15,31 @@ function authHeaders() {
     ...(t ? { Authorization: `Bearer ${t}` } : {}),
   };
 }
-// ======================= END AUTH GUARD =====================================
 
-/* ========== DOM helpers ========== */
+// ======================= DOM refs =======================
 const $ = (s) => document.querySelector(s);
-const messagesEl = $("#messages");
-const promptEl = $("#prompt");
-const sendBtn = $("#send");
-const newChatBtn = $("#newChatBtn");
-const searchInput = $("#searchChats");
-const historyList = $("#historyList");
-const foldersList = $("#foldersList");
+const messagesEl   = $("#messages");
+const promptEl     = $("#prompt");
+const sendBtn      = $("#send");
+const newChatBtn   = $("#newChatBtn");
+const searchInput  = $("#searchChats");
+const historyList  = $("#historyList");
+const foldersList  = $("#foldersList");
 const newFolderInp = $("#newFolderName");
 const addFolderBtn = $("#addFolderBtn");
-const convTitleEl = $("#convTitle");
-const tracePanel = $("#tracePanel");
+const convTitleEl  = $("#convTitle");
+const tracePanel   = $("#tracePanel");
 const traceStepsEl = $("#traceSteps");
-const toggleTrace = $("#toggleTrace");
-const plusBtn = $("#plusBtn");
-const plusMenu = $("#plusMenu");
+const toggleTrace  = $("#toggleTrace");
+const plusBtn      = $("#plusBtn");
+const plusMenu     = $("#plusMenu");
+const typingNotice = $("#typingNotice");
 
-/* ========== State & storage ========== */
+// ======================= State & storage =======================
 const storage = {
   load() {
-    try {
-      return JSON.parse(localStorage.getItem("sec_copilot_state") || "{}");
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(localStorage.getItem("sec_copilot_state") || "{}"); }
+    catch { return {}; }
   },
   save(s) {
     localStorage.setItem("sec_copilot_state", JSON.stringify(s));
@@ -52,26 +49,44 @@ const storage = {
 let state = Object.assign(
   {
     conversations: {}, // id -> { id, title, messages:[{role,content,html}], final, steps }
-    order: [], // newest first ids
-    folders: {}, // id -> { id, name, chatIds:[] }
-    folderOrder: [], // newest first ids
+    order: [],         // newest first ids
+    folders: {},       // id -> { id, name, chatIds:[] }
+    folderOrder: [],   // newest first ids
   },
   storage.load()
 );
 
 let activeId = null;
 
-/* ========== UI building blocks ========== */
+// ======================= Helpers =======================
+function showTyping(show) {
+  if (!typingNotice) return;
+  typingNotice.classList.toggle("hidden", !show);
+}
+
 function bubble(role, html) {
   const wrap = document.createElement("div");
   wrap.className = `msg ${role}`;
+  const badgeDot =
+    role === "assistant" ? "dot-assistant" :
+    role === "user"      ? "dot-user" :
+                           "dot-system";
+  const label =
+    role === "assistant" ? "SEC-COPILOT" :
+    role === "user"      ? "You" :
+                           "System";
+
   wrap.innerHTML = `
-    <div class="avatar">${role === "assistant" ? "🛡️" : "🧑"}</div>
-    <div class="bubble"><div class="content">${html}</div></div>
+    <div class="avatar">${role === "assistant" ? "🛡️" : role === "user" ? "🧑" : "⚙️"}</div>
+    <div class="bubble chat-bubble ${role === "assistant" ? "bubble-assistant" : role === "user" ? "bubble-user" : ""}">
+      <div class="role-badge"><span class="role-dot ${badgeDot}"></span>${label}</div>
+      <div class="content" style="margin-top:6px">${html}</div>
+    </div>
   `;
   return wrap;
 }
-function typing() {
+
+function typingBubble() {
   const el = document.createElement("div");
   el.className = "msg assistant";
   el.innerHTML = `
@@ -84,38 +99,29 @@ function scrollToBottom() {
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-/* ========== API wrapper ========== */
+// ======================= API wrapper =======================
 async function api(path, opts = {}) {
   const res = await fetch(path, {
     ...opts,
     headers: { ...(opts.headers || {}), ...authHeaders() },
   });
-
-  // Handle expired/invalid token centrally
   if (res.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
     location.replace("/auth.html");
-    return Promise.reject({ detail: "Unauthorized" });
+    throw { detail: "Unauthorized" };
   }
-
   if (!res.ok) {
     let err;
-    try {
-      err = await res.json();
-    } catch {
-      err = { detail: res.statusText };
-    }
+    try { err = await res.json(); } catch { err = { detail: res.statusText }; }
     throw err;
   }
   return res.json();
 }
 
+// ======================= Data fetchers =======================
 async function loadFolders() {
   const folders = await api("/data/folders");
   state.folders = {};
@@ -125,7 +131,6 @@ async function loadFolders() {
     state.folderOrder.unshift(f.id);
   });
 }
-
 async function loadHistory() {
   const list = await api("/data/conversations");
   state.conversations = {};
@@ -140,7 +145,6 @@ async function loadHistory() {
     )
   );
 }
-
 async function createFolder(name) {
   const f = await api("/data/folders", {
     method: "POST",
@@ -149,7 +153,6 @@ async function createFolder(name) {
   await loadFolders();
   return f;
 }
-
 async function createConversation(title, folder_id = null) {
   const c = await api("/data/conversations", {
     method: "POST",
@@ -159,7 +162,7 @@ async function createConversation(title, folder_id = null) {
   return c;
 }
 
-/* ========== Trace rendering ========== */
+// ======================= Trace rendering =======================
 function renderTrace(steps) {
   traceStepsEl.innerHTML = "";
   (steps || []).forEach((s) => {
@@ -172,17 +175,13 @@ function renderTrace(steps) {
     const div = document.createElement("div");
     div.className = "tstep";
     div.innerHTML = `
-      <div class="tmeta"><div><strong>${s.agent}</strong></div><div>conf ${(
-      s.confidence ?? 0
-    ).toFixed(2)}</div></div>
+      <div class="tmeta"><div><strong>${escapeHtml(s.agent || "agent")}</strong></div><div>conf ${(s.confidence ?? 0).toFixed(2)}</div></div>
       <div>${escapeHtml(s.rationale || "")}</div>
       ${calls ? `<div class="pills">${calls}</div>` : ""}
       ${hits ? `<div class="pills">${hits}</div>` : ""}
       ${
         s.outputs
-          ? `<pre style="margin-top:6px;white-space:pre-wrap">${escapeHtml(
-              JSON.stringify(s.outputs, null, 2)
-            )}</pre>`
+          ? `<pre style="margin-top:6px;white-space:pre-wrap">${escapeHtml(JSON.stringify(s.outputs, null, 2))}</pre>`
           : ""
       }
     `;
@@ -190,21 +189,31 @@ function renderTrace(steps) {
   });
 }
 
-/* Convert FinalDecision to numbered list */
+// Convert FinalDecision to HTML (same as before)
 function renderSolution(final) {
   if (!final) return "No decision.";
-  const steps = Array.isArray(final.recommendations)
-    ? final.recommendations
-    : [];
+  const steps = Array.isArray(final.recommendations) ? final.recommendations : [];
   const list = steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("");
   return `<div><strong>${escapeHtml(final.summary || "")}</strong></div>
-          <div style="color:#bdbdbd;font-size:13px;margin:6px 0">Risk score: ${(
-            final.risk_score ?? 0
-          ).toFixed(2)}</div>
+          <div style="color:#6b7280;font-size:13px;margin:6px 0">Risk score: ${(final.risk_score ?? 0).toFixed(2)}</div>
           ${steps.length ? `<ol>${list}</ol>` : ""}`;
 }
 
-/* ========== Sidebar: folders & history ========== */
+// Same, but plain text (for typewriter)
+function solutionPlainText(final) {
+  if (!final) return "No decision.";
+  const parts = [];
+  if (final.summary) parts.push(final.summary);
+  if (Array.isArray(final.recommendations) && final.recommendations.length) {
+    final.recommendations.forEach((s, i) => parts.push(`${i + 1}. ${s}`));
+  }
+  if (typeof final.risk_score === "number") {
+    parts.push(`Risk score: ${final.risk_score.toFixed(2)}`);
+  }
+  return parts.join("\n\n");
+}
+
+// ======================= Sidebar: folders & history =======================
 function redrawFolders() {
   foldersList.innerHTML = "";
   state.folderOrder.forEach((fid) => {
@@ -217,9 +226,7 @@ function redrawFolders() {
         <div class="folder-title">📁 ${escapeHtml(f.name)}</div>
         <div class="tiny muted">${(f.chatIds || []).length} chats</div>
       </div>
-      <div class="folder-body hidden">
-        <ul class="folder-chats"></ul>
-      </div>
+      <div class="folder-body hidden"><ul class="folder-chats"></ul></div>
     `;
     const body = li.querySelector(".folder-body");
     const list = li.querySelector(".folder-chats");
@@ -229,7 +236,7 @@ function redrawFolders() {
       const item = document.createElement("li");
       item.innerHTML = `<button class="chat-link" data-id="${cid}">
           <span>${escapeHtml(c.title || "Untitled")}</span>
-          <span class="tiny">open</span>
+          <span class="tiny">${new Date(c.time || Date.now()).toLocaleDateString()}</span>
         </button>`;
       list.appendChild(item);
     });
@@ -244,14 +251,11 @@ function redrawHistory(filter = "") {
   state.order.forEach((id) => {
     const c = state.conversations[id];
     if (!c) return;
-    if (filter && !(c.title || "").toLowerCase().includes(filter.toLowerCase()))
-      return;
+    if (filter && !(c.title || "").toLowerCase().includes(filter.toLowerCase())) return;
     const li = document.createElement("li");
     li.innerHTML = `<button class="chat-link" data-id="${id}">
         <span>${escapeHtml(c.title || "Untitled")}</span>
-        <span class="tiny">${new Date(
-          c.time || Date.now()
-        ).toLocaleDateString()}</span>
+        <span class="tiny">${new Date(c.time || Date.now()).toLocaleDateString()}</span>
       </button>`;
     historyList.appendChild(li);
   });
@@ -265,7 +269,7 @@ function attachHistoryEvents() {
   });
 }
 
-/* ========== Conversation ops ========== */
+// ======================= Conversation ops =======================
 async function newConversation(folderId = null) {
   const conv = await createConversation("New conversation", folderId);
   activeId = conv.id;
@@ -279,13 +283,16 @@ async function newConversation(folderId = null) {
   messagesEl.innerHTML = `
     <div class="msg assistant intro">
       <div class="avatar">🛡️</div>
-      <div class="bubble"><div class="content">
-        New chat. Ask me anything about your investigation.
-      </div></div>
+      <div class="bubble chat-bubble bubble-assistant"><div class="role-badge"><span class="role-dot dot-assistant"></span>SEC-COPILOT</div>
+        <div class="content" style="margin-top:6px">
+          New chat. Ask me anything about your investigation.
+        </div>
+      </div>
     </div>`;
   traceStepsEl.innerHTML = "";
   tracePanel.classList.add("hidden");
   toggleTrace.textContent = "Show agent trace";
+  showTyping(false);
   redrawHistory();
   redrawFolders();
   attachHistoryEvents();
@@ -303,22 +310,41 @@ function openConversation(id) {
   );
   scrollToBottom();
   renderTrace(c.steps || []);
-  if (c.steps) {
-    tracePanel.classList.add("hidden");
-    toggleTrace.textContent = "Show agent trace";
-  }
+  tracePanel.classList.add("hidden");
+  toggleTrace.textContent = "Show agent trace";
+  showTyping(false);
 }
 
-/* ========== Send flow ========== */
+// ======================= Typewriter =======================
+function typewriterInto(el, fullText, speed = 12) {
+  return new Promise((resolve) => {
+    let i = 0;
+    const safe = String(fullText || "");
+    el.textContent = "";
+    const handle = setInterval(() => {
+      i += Math.max(1, Math.round(safe.length / 60));
+      el.textContent = safe.slice(0, i);
+      if (i >= safe.length) {
+        clearInterval(handle);
+        resolve();
+      }
+    }, speed);
+  });
+}
+
+// ======================= Send flow =======================
 async function sendPrompt() {
   const text = promptEl.value.trim();
   if (!text) return;
+
   if (!activeId) await newConversation();
+
   const c = state.conversations[activeId];
 
   // user bubble
   const userHtml = escapeHtml(text);
-  messagesEl.appendChild(bubble("user", userHtml));
+  const userNode = bubble("user", userHtml);
+  messagesEl.appendChild(userNode);
   c.messages.push({ role: "user", html: userHtml, content: text });
   if (c.title === "New conversation") c.title = text.slice(0, 60);
   convTitleEl.textContent = c.title;
@@ -326,9 +352,11 @@ async function sendPrompt() {
   promptEl.focus();
   scrollToBottom();
 
-  // typing
-  const t = typing();
-  messagesEl.appendChild(t);
+  // assistant placeholder + typing indicator
+  const asstNode = bubble("assistant", "");
+  const contentTarget = asstNode.querySelector(".content");
+  messagesEl.appendChild(asstNode);
+  showTyping(true);
   scrollToBottom();
   sendBtn.disabled = true;
 
@@ -336,28 +364,28 @@ async function sendPrompt() {
     const body = {
       messages: [{ role: "user", content: text }],
       mode: "assist",
-      conversation_id: activeId, // important for threading
+      conversation_id: activeId,
     };
     const data = await api("/api/chat", {
       method: "POST",
       body: JSON.stringify(body),
     });
 
-    messagesEl.removeChild(t);
+    // typewriter on plain text for smooth animation
+    const plain = solutionPlainText(data.final);
+    await typewriterInto(contentTarget, plain, 8);
 
-    const ansHtml = renderSolution(data.final);
-    messagesEl.appendChild(bubble("assistant", ansHtml));
-    c.messages.push({
-      role: "assistant",
-      html: ansHtml,
-      content: data.final?.summary || "",
-    });
+    // swap to rich HTML at the end
+    contentTarget.innerHTML = renderSolution(data.final);
+
+    // persist in state
+    const ansHtml = contentTarget.innerHTML;
+    c.messages.push({ role: "assistant", html: ansHtml, content: data.final?.summary || "" });
     c.final = data.final;
     c.steps = data.steps;
     c.time = Date.now();
     renderTrace(c.steps);
 
-    // persist client-side snapshot
     storage.save(state);
     redrawHistory(searchInput.value.trim());
     redrawFolders();
@@ -365,16 +393,14 @@ async function sendPrompt() {
     scrollToBottom();
   } catch (err) {
     console.error(err);
-    messagesEl.removeChild(t);
-    messagesEl.appendChild(
-      bubble("assistant", "Something went wrong. Please try again.")
-    );
+    contentTarget.textContent = "Something went wrong. Please try again.";
   } finally {
     sendBtn.disabled = false;
+    showTyping(false);
   }
 }
 
-/* ========== Events ========== */
+// ======================= Events =======================
 $("#composer").addEventListener("submit", (e) => {
   e.preventDefault();
   sendPrompt();
@@ -388,16 +414,13 @@ searchInput.addEventListener("input", () => {
   redrawHistory(searchInput.value.trim());
   attachHistoryEvents();
 });
-
 toggleTrace.addEventListener("click", () => {
   const show = tracePanel.classList.toggle("hidden") === false;
   toggleTrace.textContent = show ? "Hide agent trace" : "Show agent trace";
 });
 
 /* plus menu */
-plusBtn.addEventListener("click", () => {
-  plusMenu.classList.toggle("hidden");
-});
+plusBtn.addEventListener("click", () => plusMenu.classList.toggle("hidden"));
 document.addEventListener("click", (e) => {
   if (!plusMenu.contains(e.target) && e.target !== plusBtn)
     plusMenu.classList.add("hidden");
@@ -419,16 +442,12 @@ addFolderBtn.addEventListener("click", async () => {
   attachHistoryEvents();
 });
 
-/* move active chat to a folder via prompt (simple for now) */
+/* quick move (unchanged) */
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key === "m") {
     if (!activeId) return alert("Open a chat first.");
     const names = state.folderOrder.map((fid) => state.folders[fid].name);
-    const which = prompt(
-      `Move to which folder?\n${names
-        .map((n, i) => `${i + 1}. ${n}`)
-        .join("\n")}`
-    );
+    const which = prompt(`Move to which project?\n${names.map((n,i)=>`${i+1}. ${n}`).join("\n")}`);
     const idx = parseInt(which || "", 10) - 1;
     if (Number.isNaN(idx) || idx < 0 || idx >= state.folderOrder.length) return;
     const fid = state.folderOrder[idx];
@@ -442,7 +461,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-/* ========== Boot ========== */
+// ======================= Boot =======================
 async function boot() {
   try {
     await loadFolders();
@@ -464,26 +483,20 @@ async function boot() {
 }
 boot();
 
-/* --- mobile sidebar toggle wiring --- */
-const sidebar = document.getElementById("sidebar");
+// Mobile sidebar wiring
+const sidebar  = document.getElementById("sidebar");
 const backdrop = document.getElementById("backdrop");
-const openBtn = document.getElementById("openSidebar");
+const openBtn  = document.getElementById("openSidebar");
 const closeBtn = document.getElementById("closeSidebar");
 
-function openSidebar() {
-  sidebar.classList.add("open");
-  backdrop.classList.remove("hidden");
-}
-function closeSidebar() {
-  sidebar.classList.remove("open");
-  backdrop.classList.add("hidden");
-}
+function openSidebar() { sidebar.classList.add("open"); backdrop.classList.remove("hidden"); }
+function closeSidebar(){ sidebar.classList.remove("open"); backdrop.classList.add("hidden"); }
 
-if (openBtn) openBtn.addEventListener("click", openSidebar);
-if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
-if (backdrop) backdrop.addEventListener("click", closeSidebar);
+openBtn?.addEventListener("click", openSidebar);
+closeBtn?.addEventListener("click", closeSidebar);
+backdrop?.addEventListener("click", closeSidebar);
 
-// ✅ updated logout → unified auth page
+// Logout
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   localStorage.removeItem(TOKEN_KEY);
   window.location.replace("/auth.html");

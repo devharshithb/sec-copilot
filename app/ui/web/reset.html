@@ -2,140 +2,115 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Reset password — SEC-COPILOT</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reset password — SEC-COPILOT</title>
 
-    <!-- Match auth fonts/icons -->
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <!-- Montserrat font & icons -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
-    <!-- Tailwind build (new) -->
-    <link rel="stylesheet" href="tailwind.css" />
+  <!-- DEV cache-busting for CSS -->
+  <script>
+    (function () {
+      var bust = Date.now();
+      ["tailwind.css", "style.css"].forEach(function (file) {
+        var link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = file + "?v=" + bust;
+        document.head.appendChild(link);
+      });
+    })();
+  </script>
+  <noscript>
+    <link rel="stylesheet" href="tailwind.css">
+    <link rel="stylesheet" href="style.css">
+  </noscript>
 
-    <style>
-        body {
-            background: #f6f5f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            font-family: 'Montserrat', sans-serif;
-            height: 100vh;
-            margin: -20px 0 50px;
-        }
+  <style>
+    body {
+      background: #f6f5f7;
+      display: flex; justify-content: center; align-items: center; flex-direction: column;
+      font-family: 'Montserrat', sans-serif; height: 100vh; margin: -20px 0 50px;
+    }
+    h1 { font-weight: bold; margin: 0; }
+    a { color: #333; font-size: 14px; text-decoration: none; margin: 15px 0; }
 
-        h1 {
-            font-weight: bold;
-            margin: 0;
-        }
-
-        a {
-            color: #333;
-            font-size: 14px;
-            text-decoration: none;
-            margin: 15px 0;
-        }
-
-        form {
-            background-color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 20px 40px;
-            text-align: center;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            width: 320px;
-            max-width: 90%;
-            min-height: 300px;
-        }
-
-        input {
-            background-color: #eee;
-            border: none;
-            padding: 12px 15px;
-            margin: 8px 0;
-            width: 100%;
-            border-radius: 6px;
-        }
-
-        #pwd2 {
-            margin-bottom: 16px;
-        }
-
-        /* extra spacing requested */
-        button {
-            border-radius: 20px;
-            border: 1px solid #FF4B2B;
-            background-color: #FF4B2B;
-            color: #FFFFFF;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 10px 35px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: transform 80ms ease-in;
-            cursor: pointer;
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        .msg {
-            min-height: 20px;
-            font-size: 13px;
-            margin: 6px 0;
-            color: #e33;
-        }
-    </style>
+    form {
+      background-color: #FFFFFF; display: flex; align-items: center; justify-content: center;
+      flex-direction: column; padding: 20px 40px; text-align: center; border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); width: 320px; max-width: 90%; min-height: 300px;
+    }
+    input {
+      background-color: #eee; border: none; padding: 12px 15px; margin: 8px 0; width: 100%; border-radius: 6px;
+    }
+    #pwd2 { margin-bottom: 16px; }           /* extra spacing below confirm */
+    button {
+      border-radius: 20px; border: 1px solid #FF4B2B; background-color: #FF4B2B; color: #FFFFFF;
+      font-size: 12px; font-weight: bold; padding: 10px 35px; letter-spacing: 1px; text-transform: uppercase;
+      transition: transform 80ms ease-in; cursor: pointer;
+    }
+    button:active { transform: scale(0.95); }
+    button:focus { outline: none; }
+    .msg { min-height: 20px; font-size: 13px; margin: 6px 0; color: #e33; }
+  </style>
 </head>
 
-<body class="font-mont">
-    <h2>Reset your password</h2>
+<body>
+  <h2>Reset your password</h2>
 
-    <form id="resetForm">
-        <h1>Set New Password</h1>
-        <div class="msg" id="msg"></div>
-        <input id="pwd1" type="password" placeholder="New password" required minlength="6" />
-        <input id="pwd2" type="password" placeholder="Confirm password" required minlength="6" />
-        <button type="submit" id="btn">Update Password</button>
-        <a href="/auth.html">Back to sign in</a>
-    </form>
+  <form id="resetForm">
+    <h1>Set New Password</h1>
+    <div class="msg" id="msg"></div>
+    <input id="pwd1" type="password" placeholder="New password" required minlength="6" />
+    <input id="pwd2" type="password" placeholder="Confirm password" required minlength="6" />
+    <button type="submit" id="btn">Update Password</button>
+    <a href="/auth.html">Back to sign in</a>
+  </form>
 
-    <script>
-        const params = new URLSearchParams(location.search);
-        const token = params.get('token');
-        const msg = document.getElementById('msg');
-        const btn = document.getElementById('btn');
-        const form = document.getElementById('resetForm');
-        const TOKEN_KEY = 'sec_token';
+  <script>
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    const msg = document.getElementById('msg');
+    const btn = document.getElementById('btn');
+    const form = document.getElementById('resetForm');
+    const TOKEN_KEY = 'sec_token';
 
-        try { localStorage.removeItem(TOKEN_KEY); } catch { }
+    try { localStorage.removeItem(TOKEN_KEY); } catch {}
 
-        if (!token) { msg.textContent = 'Missing reset token. Please open the link from your email.'; btn.disabled = true; }
+    if (!token) {
+      msg.textContent = 'Missing reset token. Please open the link from your email.';
+      btn.disabled = true;
+    }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            msg.textContent = '';
-            const p1 = document.getElementById('pwd1').value.trim();
-            const p2 = document.getElementById('pwd2').value.trim();
-            if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
-            if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
-            btn.disabled = true; btn.textContent = 'Saving…';
-            try {
-                const res = await fetch('/auth/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, new_password: p1 }) });
-                const data = await res.json();
-                if (!res.ok) { msg.textContent = data?.detail || 'Reset failed.'; btn.disabled = false; btn.textContent = 'Update Password'; return; }
-                msg.style.color = '#2e7d32'; msg.textContent = 'Password updated. You can sign in now.';
-                setTimeout(() => location.replace('/auth.html'), 1200);
-            } catch (e) {
-                msg.textContent = 'Network error.'; btn.disabled = false; btn.textContent = 'Update Password';
-            }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.textContent = '';
+      const p1 = document.getElementById('pwd1').value.trim();
+      const p2 = document.getElementById('pwd2').value.trim();
+      if (p1.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; return; }
+      if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const res = await fetch('/auth/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, new_password: p1 })
         });
-    </script>
+        const data = await res.json();
+        if (!res.ok) {
+          msg.textContent = data?.detail || 'Reset failed.';
+          btn.disabled = false; btn.textContent = 'Update Password';
+          return;
+        }
+        msg.style.color = '#2e7d32';
+        msg.textContent = 'Password updated. You can sign in now.';
+        setTimeout(() => location.replace('/auth.html'), 1200);
+      } catch (e) {
+        msg.textContent = 'Network error.';
+        btn.disabled = false; btn.textContent = 'Update Password';
+      }
+    });
+  </script>
 </body>
-
 </html>
