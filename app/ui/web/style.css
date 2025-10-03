@@ -28,7 +28,7 @@
 
 html[data-theme="dark"] {
   /* core dark UI */
-  --panel: rgb(24, 24, 24); /* sidebar */
+  --panel: #0f0f0f;
   --bar: #1a1a1a;
   --text: #ffffff;
   --muted: #cfcfcf;
@@ -39,9 +39,8 @@ html[data-theme="dark"] {
   --surface-1: #141414;
   --surface-2: #1d1d1d;
   --surface-3: #111111;
-  --app-bg: rgb(33, 33, 33); /* conversation page background */
+  --app-bg: #0b0b0b;
 
-  /* brand (same across themes) */
   --brand-1: #84af9c;
   --brand-2: #46b29e;
   --brand-3: #efca58;
@@ -651,13 +650,14 @@ html[data-theme="dark"] .composer-wrap {
 
 .toggleWrapper {
   display: flex;
-  align-items: center; /* ✅ centers vertically */
+  align-items: center;   /* ✅ centers vertically */
   justify-content: center;
-  height: 100%; /* take full height of the top-actions container */
-  margin-top: 0; /* reset accidental shifts */
+  height: 100%;          /* take full height of the top-actions container */
+  margin-top: 0;         /* reset accidental shifts */
 }
 
 toggleWrapper {
+
   position: relative;
   vertical-align: middle;
   padding: 0;
@@ -667,31 +667,32 @@ toggleWrapper {
   left: -9999px;
 }
 
+
 .toggle {
   cursor: pointer;
   display: inline-block;
   position: relative;
-  width: 60px; /* compact */
-  height: 30px; /* compact */
-  background-color: #83d8ff;
+  width: 60px;            /* compact */
+  height: 30px;           /* compact */
+  background-color: #83D8FF;
   border-radius: 30px;
   transition: background-color 200ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
 }
 .toggle:before {
   content: "AM";
   position: absolute;
-  left: -28px; /* tighter */
-  top: 7px; /* centered for 30px height */
+  left: -28px;            /* tighter */
+  top: 7px;               /* centered for 30px height */
   font-size: 11px;
   color: var(--muted);
 }
 .toggle:after {
   content: "PM";
   position: absolute;
-  right: -26px; /* tighter */
+  right: -26px;           /* tighter */
   top: 7px;
   font-size: 11px;
-  color: #749ed7;
+  color: #749ED7;
 }
 .toggle:before,
 .toggle:after {
@@ -701,134 +702,65 @@ toggleWrapper {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 26px; /* knob size */
+  width: 26px;            /* knob size */
   height: 26px;
-  background-color: #ffcf96;
+  background-color: #FFCF96;
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
   transform: rotate(-45deg);
-  transition: all 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transition: all 400ms cubic-bezier(0.68,-0.55,0.265,1.55);
 }
 .toggle__handler .crater {
   position: absolute;
-  background-color: #e8cda5;
+  background-color: #E8CDA5;
   opacity: 0;
   border-radius: 50%;
   transition: opacity 200ms ease-in-out;
 }
-.toggle__handler .crater--1 {
-  top: 9px;
-  left: 6px;
-  width: 3px;
-  height: 3px;
-}
-.toggle__handler .crater--2 {
-  top: 15px;
-  left: 12px;
-  width: 4px;
-  height: 4px;
-}
-.toggle__handler .crater--3 {
-  top: 6px;
-  left: 15px;
-  width: 5px;
-  height: 5px;
-}
+.toggle__handler .crater--1 { top: 9px; left: 6px;  width: 3px; height: 3px; }
+.toggle__handler .crater--2 { top: 15px; left: 12px; width: 4px; height: 4px; }
+.toggle__handler .crater--3 { top: 6px;  left: 15px; width: 5px; height: 5px; }
 
 .star {
   position: absolute;
   background-color: #fff;
   border-radius: 50%;
-  transition: all 300ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  transition: all 300ms cubic-bezier(0.445,0.05,0.55,0.95);
 }
-.star--1 {
-  top: 7px;
-  left: 22px;
-  width: 20px;
-  height: 2px;
-}
-.star--2 {
-  top: 12px;
-  left: 18px;
-  width: 20px;
-  height: 2px;
-}
-.star--3 {
-  top: 17px;
-  left: 26px;
-  width: 20px;
-  height: 2px;
-}
-.star--4,
-.star--5,
-.star--6 {
+.star--1 { top: 7px;  left: 22px; width: 20px; height: 2px; }
+.star--2 { top: 12px; left: 18px; width: 20px; height: 2px; }
+.star--3 { top: 17px; left: 26px; width: 20px; height: 2px; }
+.star--4, .star--5, .star--6 {
   opacity: 0;
-  transform: translate3d(3px, 0, 0);
+  transform: translate3d(3px,0,0);
 }
-.star--4 {
-  top: 10px;
-  left: 8px;
-  width: 2px;
-  height: 2px;
-}
-.star--5 {
-  top: 20px;
-  left: 12px;
-  width: 2px;
-  height: 2px;
-}
-.star--6 {
-  top: 23px;
-  left: 19px;
-  width: 2px;
-  height: 2px;
-}
+.star--4 { top: 10px; left: 8px;  width: 2px; height: 2px; }
+.star--5 { top: 20px; left: 12px; width: 2px; height: 2px; }
+.star--6 { top: 23px; left: 19px; width: 2px; height: 2px; }
 
 /* Checked (dark visual) */
 .toggleWrapper .dn:checked + .toggle {
-  background-color: #749dd6;
+  background-color: #749DD6;
 }
-.toggleWrapper .dn:checked + .toggle:before {
-  color: #749ed7;
-}
-.toggleWrapper .dn:checked + .toggle:after {
-  color: #fff;
-}
+.toggleWrapper .dn:checked + .toggle:before { color: #749ED7; }
+.toggleWrapper .dn:checked + .toggle:after  { color: #fff; }
 
 /* ⭐️ This is the rule you were missing (compact knob translation) */
 .toggleWrapper .dn:checked + .toggle .toggle__handler {
-  background-color: #ffe5b5;
-  transform: translateX(30px) rotate(0); /* <— compact move */
+  background-color: #FFE5B5;
+  transform: translateX(30px) rotate(0);  /* <— compact move */
 }
 .toggleWrapper .dn:checked + .toggle .toggle__handler .crater {
   opacity: 1;
 }
-.toggleWrapper .dn:checked + .toggle .star--1 {
-  width: 2px;
-  height: 2px;
-}
-.toggleWrapper .dn:checked + .toggle .star--2 {
-  width: 4px;
-  height: 4px;
-  transform: translate3d(-5px, 0, 0);
-}
-.toggleWrapper .dn:checked + .toggle .star--3 {
-  width: 2px;
-  height: 2px;
-  transform: translate3d(-7px, 0, 0);
-}
+.toggleWrapper .dn:checked + .toggle .star--1 { width: 2px; height: 2px; }
+.toggleWrapper .dn:checked + .toggle .star--2 { width: 4px; height: 4px; transform: translate3d(-5px,0,0); }
+.toggleWrapper .dn:checked + .toggle .star--3 { width: 2px; height: 2px; transform: translate3d(-7px,0,0); }
 .toggleWrapper .dn:checked + .toggle .star--4,
 .toggleWrapper .dn:checked + .toggle .star--5,
 .toggleWrapper .dn:checked + .toggle .star--6 {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
+  opacity: 1; transform: translate3d(0,0,0);
 }
-.toggleWrapper .dn:checked + .toggle .star--4 {
-  transition-delay: 200ms;
-}
-.toggleWrapper .dn:checked + .toggle .star--5 {
-  transition-delay: 300ms;
-}
-.toggleWrapper .dn:checked + .toggle .star--6 {
-  transition-delay: 400ms;
-}
+.toggleWrapper .dn:checked + .toggle .star--4 { transition-delay: 200ms; }
+.toggleWrapper .dn:checked + .toggle .star--5 { transition-delay: 300ms; }
+.toggleWrapper .dn:checked + .toggle .star--6 { transition-delay: 400ms; }
