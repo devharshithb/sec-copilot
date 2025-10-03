@@ -17,3 +17,5 @@ node_modules/
 .env.*
 !.env.example
 .DS_Store
+node_modules
+app/ui/web/tailwind.css

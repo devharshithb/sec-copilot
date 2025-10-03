@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SEC-COPILOT</title>
 
-  <!-- Match auth/reset fonts/icons -->
+  <!-- Fonts/icons to match auth/reset pages -->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,800" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
+  <!-- Tailwind build (new) then your existing CSS -->
+  <link rel="stylesheet" href="tailwind.css" />
   <link rel="stylesheet" href="style.css" />
 
   <!-- Auth gate -->
@@ -20,10 +23,12 @@
       } catch (_) { window.location.replace('/auth.html'); }
     })();
   </script>
-  <noscript><meta http-equiv="refresh" content="0;url=/auth.html"></noscript>
+  <noscript>
+    <meta http-equiv="refresh" content="0;url=/auth.html">
+  </noscript>
 </head>
 
-<body>
+<body class="font-mont">
   <div class="layout">
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
@@ -34,7 +39,7 @@
       </div>
 
       <div class="side-actions">
-        <button id="newChatBtn" class="btn primary">New chat</button>
+        <button id="newChatBtn" class="btn-auth">New chat</button>
         <div class="search">
           <input id="searchChats" placeholder="Search chats" />
         </div>
@@ -65,12 +70,12 @@
         </div>
         <div class="top-actions">
           <button id="toggleTrace" class="btn">Show agent trace</button>
-          <button id="logoutBtn" class="btn">Logout</button>
+          <button id="logoutBtn" class="btn hover:bg-[#1a1a1a]">Logout</button>
         </div>
       </header>
 
       <!-- chat stream -->
-      <section id="messages" class="messages"></section>
+      <section id="messages" class="messages px-3 sm:px-6"></section>
 
       <!-- trace -->
       <section id="tracePanel" class="trace hidden">
@@ -104,4 +109,5 @@
   <div id="backdrop" class="backdrop hidden"></div>
   <script src="app.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Your auth/reset palette as utilities */
+:root {
+  --auth-red: #FF4B2B;
+  --auth-pink: #FF416C;
+}
+
+/* Helpers matching your existing vibe (optional to use) */
+.btn-auth {
+  @apply rounded-full font-bold uppercase tracking-wide text-white border px-6 py-3 text-xs;
+  border-color: var(--auth-red);
+  background-color: var(--auth-red);
+}
+.btn-auth:active { transform: scale(0.98); }
+
+.card-soft { @apply bg-white rounded-lg shadow-card; }
+.input-soft { @apply w-full bg-[#eee] border-0 rounded-md py-3 px-4; }
+
+/* Chat helpers if you want them */
+.badge-assistant { @apply inline-flex items-center gap-2 text-xs text-zinc-500; }
+.msg-bubble { @apply max-w-[840px] rounded-2xl border px-4 py-3; }

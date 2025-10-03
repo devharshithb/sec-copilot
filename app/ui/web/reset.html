@@ -6,9 +6,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Reset password — SEC-COPILOT</title>
 
-    <!-- Montserrat font & icons -->
+    <!-- Match auth fonts/icons -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <!-- Tailwind build (new) -->
+    <link rel="stylesheet" href="tailwind.css" />
 
     <style>
         body {
@@ -27,10 +30,6 @@
             margin: 0;
         }
 
-        h2 {
-            margin-bottom: 20px;
-        }
-
         a {
             color: #333;
             font-size: 14px;
@@ -38,6 +37,35 @@
             margin: 15px 0;
         }
 
+        form {
+            background-color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px 40px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            max-width: 90%;
+            min-height: 300px;
+        }
+
+        input {
+            background-color: #eee;
+            border: none;
+            padding: 12px 15px;
+            margin: 8px 0;
+            width: 100%;
+            border-radius: 6px;
+        }
+
+        #pwd2 {
+            margin-bottom: 16px;
+        }
+
+        /* extra spacing requested */
         button {
             border-radius: 20px;
             border: 1px solid #FF4B2B;
@@ -56,41 +84,6 @@
             transform: scale(0.95);
         }
 
-        button:focus {
-            outline: none;
-        }
-
-        form {
-            background-color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 20px 40px;
-            text-align: center;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            width: 320px;
-            /* reduced width */
-            max-width: 90%;
-            /* responsive */
-            min-height: 300px;
-        }
-
-        input {
-            background-color: #eee;
-            border: none;
-            padding: 12px 15px;
-            margin: 8px 0;
-            width: 100%;
-            border-radius: 6px;
-        }
-
-        /* Extra spacing below confirm password */
-        #pwd2 {
-            margin-bottom: 16px;
-        }
-
         .msg {
             min-height: 20px;
             font-size: 13px;
@@ -100,7 +93,7 @@
     </style>
 </head>
 
-<body>
+<body class="font-mont">
     <h2>Reset your password</h2>
 
     <form id="resetForm">
@@ -120,13 +113,9 @@
         const form = document.getElementById('resetForm');
         const TOKEN_KEY = 'sec_token';
 
-        // Always clear session tokens to avoid auto-login bypass
         try { localStorage.removeItem(TOKEN_KEY); } catch { }
 
-        if (!token) {
-            msg.textContent = 'Missing reset token. Please open the link from your email.';
-            btn.disabled = true;
-        }
+        if (!token) { msg.textContent = 'Missing reset token. Please open the link from your email.'; btn.disabled = true; }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -137,23 +126,13 @@
             if (p1 !== p2) { msg.textContent = 'Passwords do not match.'; return; }
             btn.disabled = true; btn.textContent = 'Saving…';
             try {
-                const res = await fetch('/auth/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token, new_password: p1 })
-                });
+                const res = await fetch('/auth/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, new_password: p1 }) });
                 const data = await res.json();
-                if (!res.ok) {
-                    msg.textContent = data?.detail || 'Reset failed.';
-                    btn.disabled = false; btn.textContent = 'Update Password';
-                    return;
-                }
-                msg.style.color = '#2e7d32';
-                msg.textContent = 'Password updated. You can sign in now.';
+                if (!res.ok) { msg.textContent = data?.detail || 'Reset failed.'; btn.disabled = false; btn.textContent = 'Update Password'; return; }
+                msg.style.color = '#2e7d32'; msg.textContent = 'Password updated. You can sign in now.';
                 setTimeout(() => location.replace('/auth.html'), 1200);
             } catch (e) {
-                msg.textContent = 'Network error.';
-                btn.disabled = false; btn.textContent = 'Update Password';
+                msg.textContent = 'Network error.'; btn.disabled = false; btn.textContent = 'Update Password';
             }
         });
     </script>

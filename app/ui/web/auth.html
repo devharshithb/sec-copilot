@@ -11,8 +11,11 @@
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
+  <!-- Tailwind build (new) BEFORE inline styles -->
+  <link rel="stylesheet" href="tailwind.css" />
+
   <style>
-    /* ===== YOUR CSS (unchanged) ===== */
+    /* ===== original template CSS (unchanged) ===== */
     @import url('https://fonts.googleapis.com/css?family=Montserrat:400,800');
 
     * {
@@ -243,7 +246,7 @@
       width: 40px;
     }
 
-    /* ===== Forgot Password / OTP modal ===== */
+    /* Forgot/OTP modal */
     .backdrop {
       display: none;
       position: fixed;
@@ -306,7 +309,7 @@
   </style>
 </head>
 
-<body>
+<body class="font-mont">
   <h2>Security Copilot [Sec-copilot]</h2>
 
   <div class="container" id="container">
@@ -358,7 +361,7 @@
     </div>
   </div>
 
-  <!-- ===== OTP-based Forgot Password modal (two steps) ===== -->
+  <!-- OTP-based Forgot Password modal -->
   <div id="fp-backdrop" class="backdrop">
     <div class="modal">
       <h3 style="margin:0 0 8px;">Reset your password</h3>
@@ -371,7 +374,6 @@
         <button id="fp-send" class="btn-pri" type="button">Send code</button>
       </div>
 
-      <!-- Step 2 (appears after sending) -->
       <div id="otp-area" style="display:none;margin-top:12px;">
         <div class="muted" style="margin-bottom:6px;">Enter the 6-digit code</div>
         <input id="otp-input" type="text" placeholder="123456"
@@ -386,50 +388,34 @@
   </div>
 
   <script>
-    // ===== Panel toggle (your original) =====
+    // panel toggle
     const signUpButton = document.getElementById('signUp');
     const signInButton = document.getElementById('signIn');
     const container = document.getElementById('container');
     signUpButton.addEventListener('click', () => container.classList.add("right-panel-active"));
     signInButton.addEventListener('click', () => container.classList.remove("right-panel-active"));
 
-    // ===== Minimal integration (no design changes) =====
+    // minimal integration
     (function () {
       const TOKEN_KEY = 'sec_token';
-
-      // If already logged in → go to app
-      if (localStorage.getItem(TOKEN_KEY)) {
-        window.location.replace('/');
-        return;
-      }
-
-      // Elements
+      if (localStorage.getItem(TOKEN_KEY)) { window.location.replace('/'); return; }
       const signupForm = document.querySelector('.sign-up-container form');
       const signinForm = document.querySelector('.sign-in-container form');
-
-      // Helper: POST JSON
       async function postJSON(url, body) {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data?.detail || 'Request failed');
         return data;
       }
-
-      // SIGN UP
       signupForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('su-name').value.trim();   // <--- get name
+        const name = document.getElementById('su-name').value.trim();
         const email = document.getElementById('su-email').value.trim();
         const password = document.getElementById('su-pass').value.trim();
         const btn = document.getElementById('su-btn');
         const prev = btn.textContent; btn.disabled = true; btn.textContent = 'Creating…';
         try {
-          // include name in payload  ⬇️
-          const data = await postJSON('/auth/signup', { name, email, password });  // <---
+          const data = await postJSON('/auth/signup', { name, email, password });
           if (!data?.access_token) throw new Error('No token in response');
           localStorage.setItem(TOKEN_KEY, data.access_token);
           window.location.replace('/');
@@ -439,9 +425,6 @@
           btn.disabled = false; btn.textContent = prev;
         }
       });
-
-
-      // SIGN IN
       signinForm?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('si-email').value.trim();
@@ -461,76 +444,44 @@
       });
     })();
 
-    // ===== OTP-based Forgot Password flow =====
+    // OTP forgot flow
     (function () {
       const TOKEN_KEY = 'sec_token';
-
       const fpBackdrop = document.getElementById('fp-backdrop');
       const fpEmail = document.getElementById('fp-email');
       const fpMsg = document.getElementById('fp-msg');
       const fpSend = document.getElementById('fp-send');
       const fpCancel = document.getElementById('fp-cancel');
       const forgotLink = document.getElementById('forgotLink');
-
       const otpArea = document.getElementById('otp-area');
       const otpInput = document.getElementById('otp-input');
       const otpMsg = document.getElementById('otp-msg');
       const otpVerify = document.getElementById('otp-verify');
       const otpCancel = document.getElementById('otp-cancel');
 
-      function openFP() {
-        fpMsg.classList.remove('ok'); fpMsg.textContent = '';
-        otpMsg.textContent = '';
-        fpEmail.value = '';
-        otpInput.value = '';
-        otpArea.style.display = 'none';
-        fpBackdrop.style.display = 'flex';
-        fpEmail.focus();
-      }
-      function closeFP() {
-        fpBackdrop.style.display = 'none';
-      }
+      function openFP() { fpMsg.classList.remove('ok'); fpMsg.textContent = ''; otpMsg.textContent = ''; fpEmail.value = ''; otpInput.value = ''; otpArea.style.display = 'none'; fpBackdrop.style.display = 'flex'; fpEmail.focus(); }
+      function closeFP() { fpBackdrop.style.display = 'none'; }
 
       forgotLink?.addEventListener('click', (e) => { e.preventDefault(); openFP(); });
       fpCancel?.addEventListener('click', () => closeFP());
       fpBackdrop?.addEventListener('click', (e) => { if (e.target === fpBackdrop) closeFP(); });
       otpCancel?.addEventListener('click', () => closeFP());
 
-      // Step 1: send OTP
       fpSend?.addEventListener('click', async () => {
         const email = fpEmail.value.trim();
         if (!email) { fpMsg.textContent = 'Please enter your email.'; return; }
         fpMsg.textContent = 'Sending code…'; fpMsg.classList.remove('ok');
         fpSend.disabled = true;
         try {
-          const res = await fetch('/auth/forgot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
+          const res = await fetch('/auth/forgot', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            fpMsg.textContent = data?.detail || 'Failed to send code.';
-            return;
-          }
-          // DEV: show otp if backend returns it
-          if (data.dev_otp) {
-            otpMsg.classList.add('ok');
-            otpMsg.textContent = `DEV OTP: ${data.dev_otp}`;
-          } else {
-            otpMsg.textContent = '';
-          }
-          fpMsg.textContent = '';
-          otpArea.style.display = 'block';
-          otpInput.focus();
-        } catch {
-          fpMsg.textContent = 'Network error.';
-        } finally {
-          fpSend.disabled = false;
-        }
+          if (!res.ok) { fpMsg.textContent = data?.detail || 'Failed to send code.'; return; }
+          if (data.dev_otp) { otpMsg.classList.add('ok'); otpMsg.textContent = `DEV OTP: ${data.dev_otp}`; } else { otpMsg.textContent = ''; }
+          fpMsg.textContent = ''; otpArea.style.display = 'block'; otpInput.focus();
+        } catch { fpMsg.textContent = 'Network error.'; }
+        finally { fpSend.disabled = false; }
       });
 
-      // Step 2: verify OTP -> get reset token
       otpVerify?.addEventListener('click', async () => {
         const email = fpEmail.value.trim();
         const otp = otpInput.value.trim();
@@ -538,25 +489,13 @@
         otpMsg.textContent = 'Verifying…'; otpMsg.classList.remove('ok');
         otpVerify.disabled = true;
         try {
-          const res = await fetch('/auth/forgot/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, otp })
-          });
+          const res = await fetch('/auth/forgot/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, otp }) });
           const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data.reset_token) {
-            otpMsg.textContent = data?.detail || 'Invalid or expired code.';
-            otpVerify.disabled = false;
-            return;
-          }
-          // Make sure we don't carry any old session token
+          if (!res.ok || !data.reset_token) { otpMsg.textContent = data?.detail || 'Invalid or expired code.'; otpVerify.disabled = false; return; }
           try { localStorage.removeItem(TOKEN_KEY); } catch { }
           closeFP();
           window.location.replace(`/reset.html?token=${encodeURIComponent(data.reset_token)}`);
-        } catch {
-          otpMsg.textContent = 'Network error.';
-          otpVerify.disabled = false;
-        }
+        } catch { otpMsg.textContent = 'Network error.'; otpVerify.disabled = false; }
       });
     })();
   </script>
