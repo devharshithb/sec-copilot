@@ -1,41 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light"> <!-- JS will overwrite to system choice -->
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SEC-COPILOT</title>
 
-  <!-- Fonts/icons (unchanged) -->
+  <!-- in app/ui/web/index.html <head> -->
+  <link rel="stylesheet" href="tailwind.css" />
+  <link rel="stylesheet" href="style.css?v=20251004" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Match auth/reset fonts/icons -->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,800" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
-  <!-- DEV cache-busting for CSS -->
-  <script>
-    (function () {
-      var bust = Date.now();               // unique per load; swap to a version for prod
-      ["tailwind.css", "style.css"].forEach(function (file) {
-        var link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href = file + "?v=" + bust;
-        document.head.appendChild(link);
-      });
-    })();
-  </script>
-  <noscript>
-    <link rel="stylesheet" href="tailwind.css">
-    <link rel="stylesheet" href="style.css">
-  </noscript>
 
-  <!-- First-load auth gate: if no token, go to /auth.html -->
+
+  <!-- Auth gate -->
   <script>
     (function () {
       try {
-        const TOKEN_KEY = 'sec_token';
-        const token = localStorage.getItem(TOKEN_KEY);
+        const token = localStorage.getItem('sec_token');
         if (!token) window.location.replace('/auth.html');
-      } catch (_) {
-        window.location.replace('/auth.html');
-      }
+      } catch (_) { window.location.replace('/auth.html'); }
     })();
   </script>
   <noscript>
@@ -43,7 +31,7 @@
   </noscript>
 </head>
 
-<body class="font-mont">
+<body>
   <div class="layout">
     <!-- SIDEBAR -->
     <aside id="sidebar" class="sidebar">
@@ -61,9 +49,9 @@
       </div>
 
       <div class="side-group">
-        <div class="side-title">Folders</div>
+        <div class="side-title">Projects</div>
         <div class="folder-actions">
-          <input id="newFolderName" placeholder="New folder" />
+          <input id="newFolderName" placeholder="New project" />
           <button id="addFolderBtn" class="btn small">+</button>
         </div>
         <ul id="foldersList" class="folders"></ul>
@@ -83,10 +71,36 @@
         <div class="crumbs">
           Home / <span id="convTitle">New conversation</span>
         </div>
+
         <div class="top-actions">
+          <div class="theme-toggle">
+            <!-- Theme toggle (compact, no overlap) -->
+            <div class="toggleWrapper" id="themeToggleWrap">
+              <span class="ampm am"></span>
+
+              <input type="checkbox" class="dn" id="dn" />
+              <label for="dn" class="toggle">
+                <span class="toggle__handler">
+                  <span class="crater crater--1"></span>
+                  <span class="crater crater--2"></span>
+                  <span class="crater crater--3"></span>
+                </span>
+                <span class="star star--1"></span>
+                <span class="star star--2"></span>
+                <span class="star star--3"></span>
+                <span class="star star--4"></span>
+                <span class="star star--5"></span>
+                <span class="star star--6"></span>
+              </label>
+
+              <span class="ampm pm"></span>
+            </div>
+
+          </div>
           <button id="toggleTrace" class="btn">Show agent trace</button>
           <button id="logoutBtn" class="btn">Logout</button>
         </div>
+
       </header>
 
       <!-- chat stream -->
@@ -117,12 +131,28 @@
           <input id="prompt" class="input" placeholder="Ask anything" />
           <button id="send" class="send circle" aria-label="Send">➤</button>
         </form>
-        <div class="foot-tip">Press Enter to send • Ctrl+M to move chat to a folder</div>
       </footer>
     </main>
   </div>
 
   <div id="backdrop" class="backdrop hidden"></div>
   <script src="app.js"></script>
+
+  <!-- Theme init (in case app.js loads slow); app.js also binds events -->
+  <script>
+    (function () {
+      const KEY = 'sec_theme';
+      function detectSystem() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      const saved = localStorage.getItem(KEY);
+      const initial = saved || detectSystem();
+      document.documentElement.setAttribute('data-theme', initial);
+      // reflect switch
+      const cb = document.getElementById('dn');
+      if (cb) cb.checked = initial === 'dark';
+    })();
+  </script>
 </body>
+
 </html>
